@@ -430,17 +430,17 @@ async function runSystemAgentTurnWithDeps(
       throw new Error(terminalError);
     }
     if (params.session.verifiedInference !== binding) {
-      throw new SystemAgentInferenceUnavailableError("agent-turn");
+      throw new Error("The verified inference route changed during the OpenClaw turn.");
     }
     // A completed model turn is still untrusted until the exact route owner is
     // revalidated. This also rejects directives produced while config changed.
     const currentRoute = await resolveSystemAgentVerifiedInferenceRoute(binding, deps);
     if (!currentRoute) {
-      throw new SystemAgentInferenceUnavailableError("agent-turn");
+      throw new Error("The verified inference route changed during the OpenClaw turn.");
     }
     const text = extractAgentRunText(result)?.trim();
     if (!text) {
-      throw new SystemAgentInferenceUnavailableError("agent-turn");
+      throw new Error("The OpenClaw inference turn completed without a visible reply.");
     }
     return {
       text,

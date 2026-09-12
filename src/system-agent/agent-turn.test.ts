@@ -401,13 +401,16 @@ describe("runSystemAgentTurn", () => {
     }
 
     expect(failure).toBeInstanceOf(SystemAgentInferenceUnavailableError);
-    expect((failure as SystemAgentInferenceUnavailableError).failures).toEqual([
+    const unavailable = failure as SystemAgentInferenceUnavailableError;
+    expect(unavailable.failures).toEqual([
       expect.objectContaining({
         message: expect.stringContaining(
           "CLI backend google-gemini-cli cannot enforce OpenClaw's exact tool availability",
         ),
       }),
     ]);
+    expect(unavailable.message).not.toContain("openclaw onboard");
+    expect(unavailable.cause).toBe(unavailable.failures[0]);
     expect(runCliAgent).not.toHaveBeenCalled();
     expect(runEmbeddedAgent).not.toHaveBeenCalled();
   });
@@ -955,7 +958,11 @@ describe("runSystemAgentTurn", () => {
           readConfigFileSnapshot: readConfigFileSnapshot as never,
         },
       ),
-    ).rejects.toBeInstanceOf(SystemAgentInferenceUnavailableError);
+    ).rejects.toMatchObject({
+      code: "SYSTEM_AGENT_INFERENCE_UNAVAILABLE",
+      message: expect.stringContaining("openclaw onboard"),
+      failures: [],
+    });
     expect(readConfigFileSnapshot).not.toHaveBeenCalled();
     expect(runCliAgent).not.toHaveBeenCalled();
     expect(runEmbeddedAgent).not.toHaveBeenCalled();

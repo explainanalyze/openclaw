@@ -5,18 +5,22 @@ type SystemAgentInferenceStage = "agent-turn" | "planner" | "conversation";
 
 const INFERENCE_UNAVAILABLE_MESSAGE =
   "OpenClaw could not reach working inference. Run `openclaw onboard` on the machine running OpenClaw to reconnect — it live-tests the route before saving it. Then try again.";
+const REQUEST_FAILED_MESSAGE = "OpenClaw could not complete this request. Try again.";
 const INFERENCE_FAILURE_SUMMARY_MAX_CHARS = 300;
 
 function inferenceUnavailableMessage(failures: readonly unknown[]): string {
-  const detail = failures.length > 0 ? formatErrorMessage(failures[0]).trim() : "";
-  if (!detail) {
+  if (failures.length === 0) {
     return INFERENCE_UNAVAILABLE_MESSAGE;
+  }
+  const detail = formatErrorMessage(failures[0]).trim();
+  if (!detail) {
+    return REQUEST_FAILED_MESSAGE;
   }
   const summary =
     detail.length > INFERENCE_FAILURE_SUMMARY_MAX_CHARS
       ? `${truncateUtf16Safe(detail, INFERENCE_FAILURE_SUMMARY_MAX_CHARS - 1)}…`
       : detail;
-  return `${INFERENCE_UNAVAILABLE_MESSAGE} Cause: ${summary}`;
+  return `${REQUEST_FAILED_MESSAGE} Cause: ${summary}`;
 }
 
 /** Safe public error for an OpenClaw turn that could not complete with intelligence. */
@@ -27,7 +31,10 @@ export class SystemAgentInferenceUnavailableError extends Error {
     readonly stage: SystemAgentInferenceStage,
     readonly failures: readonly unknown[] = [],
   ) {
-    super(inferenceUnavailableMessage(failures));
+    super(
+      inferenceUnavailableMessage(failures),
+      failures[0] === undefined ? undefined : { cause: failures[0] },
+    );
     this.name = "SystemAgentInferenceUnavailableError";
   }
 }
