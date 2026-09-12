@@ -154,7 +154,7 @@ describe("system-agent terminal failure cleanup", () => {
       ),
     ).rejects.toMatchObject({
       code: "SYSTEM_AGENT_INFERENCE_UNAVAILABLE",
-      message: expect.not.stringContaining("openclaw onboard"),
+      message: expect.stringContaining("OpenClaw could not complete this request. Try again."),
     });
     expect(session.proposalRef.current).toBeUndefined();
     expect(session.proposalRef.operation).toBeUndefined();
